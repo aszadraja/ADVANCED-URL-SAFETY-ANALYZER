@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced URL Safety Analyzer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #3498db;
+            --primary-dark: #2980b9;
+            --secondary: #2c3e50;
+            --accent: #e74c3c;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --shadow: 0 10px 30px rgba(0,0,0,0.1);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .container:hover {
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--dark) 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,213.3C672,192,768,128,864,128C960,128,1056,192,1152,192C1248,192,1344,128,1392,96L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.2em;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .input-section {
+            margin-bottom: 40px;
+            background: var(--light);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .input-section::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.05) 0%, rgba(41, 128, 185, 0.05) 100%);
+            z-index: 0;
+        }
+
+        .input-section > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .input-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .url-input-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .url-input {
+            flex: 1;
+            padding: 18px 20px;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: var(--transition);
+            background: white;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .check-btn {
+            padding: 18px 35px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .check-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .check-btn:active {
+            transform: translateY(0);
+        }
+
+        .check-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            background: var(--light);
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: var(--shadow);
+        }
+
+        .spinner {
+            border: 4px solid rgba(52, 152, 219, 0.2);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 25px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .safety-status {
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 1.4em;
+            font-weight: bold;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .safety-status::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 0;
+        }
+
+        .safety-status > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .safety-status:hover {
+            transform: translateY(-5px);
+        }
+
+        .safe {
+            background: linear-gradient(135deg, var(--success) 0%, #219653 100%);
+            color: white;
+            border: none;
+        }
+
+        .unsafe {
+            background: linear-gradient(135deg, var(--danger) 0%, #c0392b 100%);
+            color: white;
+            border: none;
+        }
+
+        .warning {
+            background: linear-gradient(135deg, var(--warning) 0%, #e67e22 100%);
+            color: white;
+            border: none;
+        }
+
+        .error {
+            background: linear-gradient(135deg, var(--danger) 0%, #c0392b 100%);
+            color: white;
+            border: none;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .analysis-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid var(--primary);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .analysis-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.05) 0%, rgba(41, 128, 185, 0.05) 100%);
+            z-index: 0;
+        }
+
+        .analysis-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .analysis-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .analysis-card h3 {
+            margin-bottom: 20px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.3em;
+        }
+
+        .analysis-card ul {
+            list-style: none;
+        }
+
+        .analysis-card li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: var(--transition);
+        }
+
+        .analysis-card li:hover {
+            background: rgba(52, 152, 219, 0.05);
+            padding-left: 10px;
+            border-radius: 8px;
+        }
+
+        .analysis-card li:last-child {
+            border-bottom: none;
+        }
+
+        .website-preview {
+            background: var(--light);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 25px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .website-preview:hover {
+            transform: translateY(-5px);
+        }
+
+        .website-preview h3 {
+            margin-bottom: 20px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .preview-content {
+            background: white;
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 12px;
+            padding: 25px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .educational-content {
+            margin-top: 50px;
+            padding: 40px;
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.1) 0%, rgba(41, 128, 185, 0.1) 100%);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .educational-content::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%233498db" fill-opacity="0.05" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,213.3C672,192,768,128,864,128C960,128,1056,192,1152,192C1248,192,1344,128,1392,96L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .educational-content > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .educational-content h3 {
+            color: var(--dark);
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 1.8em;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .info-item {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid var(--primary);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .info-item:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.1);
+        }
+
+        .info-item h4 {
+            color: var(--dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2em;
+        }
+
+        .icon {
+            font-size: 1.2em;
+        }
+
+        .success { color: var(--success); }
+        .warning-icon { color: var(--warning); }
+        .danger { color: var(--danger); }
+        .info { color: var(--primary); }
+
+        .detail-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .detail-item:hover {
+            background: rgba(52, 152, 219, 0.05);
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: var(--dark);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            background: var(--dark);
+            color: white;
+            margin-top: 40px;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .footer p {
+            opacity: 0.8;
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--dark);
+            color: white;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9em;
+            font-weight: normal;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--dark) transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .url-input-container {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2.2em;
+            }
+            
+            .main-content {
+                padding: 25px;
+            }
+            
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-shield-alt"></i> Advanced URL Safety Analyzer</h1>
+                <p>Real-time website security analysis & threat detection</p>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <div class="url-input-container">
+                    <input type="text" class="url-input" id="urlInput" 
+                           placeholder="Enter complete website URL (e.g., https://www.example.com)" 
+                           value="https://">
+                    <button class="check-btn" id="checkBtn" onclick="checkURL()">
+                        <i class="fas fa-search"></i> Analyze URL
+                    </button>
+                </div>
+                <p style="color: #666; font-size: 0.9em;">
+                    <i class="fas fa-lightbulb"></i> Enter a complete URL including https:// for accurate analysis
+                </p>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Performing comprehensive security analysis...</p>
+                <p style="color: #666; margin-top: 10px;">Checking SSL certificates, hosting information, content safety, and more...</p>
+            </div>
+
+            <div class="result-section" id="resultSection">
+                <!-- Results will be populated by JavaScript -->
+            </div>
+
+            <div class="educational-content">
+                <h3><i class="fas fa-shield-alt"></i> Cybersecurity Knowledge Base</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <h4><i class="fas fa-lock"></i> SSL Certificate Check</h4>
+                        <p>Verifies if the website has a valid SSL certificate and checks its expiration date, issuer, and encryption strength.</p>
+                    </div>
+                    <div class="info-item">
+                        <h4><i class="fas fa-server"></i> Hosting Analysis</h4>
+                        <p>Analyzes where the website is hosted, IP address, server location, and hosting provider reputation.</p>
+                    </div>
+                    <div class="info-item">
+                        <h4><i class="fas fa-file-alt"></i> Content Inspection</h4>
+                        <p>Examines website content for suspicious elements, phishing indicators, and malicious code patterns.</p>
+                    </div>
+                    <div class="info-item">
+                        <h4><i class="fas fa-bolt"></i> Real-time Verification</h4>
+                        <p>Performs live checks to ensure the website actually exists and analyzes its current security status.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p> Advanced URL Safety Analyzer | Protecting your online security</p>
+        </div>
+    </div>
+
+    <script>
+        async function checkURL() {
+            const urlInput = document.getElementById('urlInput');
+            const checkBtn = document.getElementById('checkBtn');
+            const loading = document.getElementById('loading');
+            const resultSection = document.getElementById('resultSection');
+            
+            const url = urlInput.value.trim();
+            
+            if (!url || url === 'https://') {
+                showError('Please enter a valid URL');
+                return;
+            }
+
+            // Basic URL validation
+            try {
+                new URL(url);
+            } catch (e) {
+                showError('Please enter a valid URL format (including http:// or https://)');
+                return;
+            }
+
+            // Disable button and show loading
+            checkBtn.disabled = true;
+            checkBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            loading.style.display = 'block';
+            resultSection.style.display = 'none';
+            resultSection.innerHTML = '';
+
+            try {
+                const response = await fetch('/api/analyze-url', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Analysis failed');
+                }
+
+                displayResults(data);
+                
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                checkBtn.disabled = false;
+                checkBtn.innerHTML = '<i class="fas fa-search"></i> Analyze URL';
+                loading.style.display = 'none';
+            }
+        }
+
+        function displayResults(data) {
+            const resultSection = document.getElementById('resultSection');
+            
+            let statusClass = 'warning';
+            let statusIcon = '<i class="fas fa-exclamation-triangle"></i>';
+            let statusText = 'Needs Caution';
+
+            if (data.is_safe) {
+                statusClass = 'safe';
+                statusIcon = '<i class="fas fa-check-circle"></i>';
+                statusText = 'SAFE';
+            } else if (data.risk_level === 'high') {
+                statusClass = 'unsafe';
+                statusIcon = '<i class="fas fa-times-circle"></i>';
+                statusText = 'UNSAFE';
+            }
+
+            let resultHTML = `
+                <div class="safety-status ${statusClass}">
+                    ${statusIcon} <span style="font-size: 1.5em;">${statusText}</span>
+                    <div style="margin-top: 10px; font-size: 0.9em;">
+                        Analysis of: <strong>${data.url}</strong>
+                    </div>
+                </div>
+
+                <div class="analysis-grid">
+                    <div class="analysis-card">
+                        <h3><i class="fas fa-lock"></i> SSL & Security</h3>
+                        <ul>
+                            <li>
+                                <span class="icon ${data.ssl_info.has_ssl ? 'success' : 'danger'}">${data.ssl_info.has_ssl ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'}</span>
+                                SSL Certificate: ${data.ssl_info.has_ssl ? 'Valid' : 'Invalid/Missing'}
+                            </li>
+                            <li>
+                                <span class="icon ${data.ssl_info.valid_ssl ? 'success' : 'warning-icon'}">${data.ssl_info.valid_ssl ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-triangle"></i>'}</span>
+                                Certificate Valid: ${data.ssl_info.valid_ssl ? 'Yes' : 'No'}
+                            </li>
+                            <li>
+                                <span class="icon info"><i class="fas fa-calendar-alt"></i></span>
+                                Days Until Expiry: ${data.ssl_info.days_until_expiry || 'N/A'}
+                            </li>
+                            <li>
+                                <span class="icon info"><i class="fas fa-building"></i></span>
+                                Issuer: ${data.ssl_info.issuer || 'Unknown'}
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-card">
+                        <h3><i class="fas fa-server"></i> Hosting Information</h3>
+                        <ul>
+                            <li>
+                                <span class="icon info"><i class="fas fa-map-marker-alt"></i></span>
+                                IP Address: ${data.hosting_info.ip_address || 'Unknown'}
+                            </li>
+                            <li>
+                                <span class="icon info"><i class="fas fa-globe"></i></span>
+                                Server Location: ${data.hosting_info.country || 'Unknown'}
+                            </li>
+                            <li>
+                                <span class="icon info"><i class="fas fa-desktop"></i></span>
+                                Hosting Provider: ${data.hosting_info.organization || 'Unknown'}
+                            </li>
+                            <li>
+                                <span class="icon ${data.hosting_info.exists ? 'success' : 'danger'}">${data.hosting_info.exists ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'}</span>
+                                Website Accessible: ${data.hosting_info.exists ? 'Yes' : 'No'}
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-card">
+                        <h3><i class="fas fa-chart-bar"></i> Security Analysis</h3>
+                        <ul>
+                            <li>
+                                <span class="icon ${data.security_analysis.valid_domain ? 'success' : 'danger'}">${data.security_analysis.valid_domain ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'}</span>
+                                Valid Domain: ${data.security_analysis.valid_domain ? 'Yes' : 'No'}
+                            </li>
+                            <li>
+                                <span class="icon ${data.security_analysis.has_https ? 'success' : 'warning-icon'}">${data.security_analysis.has_https ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-triangle"></i>'}</span>
+                                Uses HTTPS: ${data.security_analysis.has_https ? 'Yes' : 'No'}
+                            </li>
+                            <li>
+                                <span class="icon ${data.security_analysis.redirects_https ? 'success' : 'info'}">${data.security_analysis.redirects_https ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-info-circle"></i>'}</span>
+                                Redirects to HTTPS: ${data.security_analysis.redirects_https ? 'Yes' : 'No'}
+                            </li>
+                            <li>
+                                <span class="icon info"><i class="fas fa-bolt"></i></span>
+                                Response Time: ${data.security_analysis.response_time || 'N/A'}ms
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+
+            // Add warnings if any
+            if (data.warnings && data.warnings.length > 0) {
+                resultHTML += `
+                    <div class="analysis-card" style="grid-column: 1 / -1;">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Security Warnings</h3>
+                        <ul>
+                            ${data.warnings.map(warning => `<li><span class="icon warning-icon"><i class="fas fa-exclamation-triangle"></i></span> ${warning}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Add website content preview if available
+            if (data.content_analysis && data.content_analysis.title) {
+                resultHTML += `
+                    <div class="website-preview">
+                        <h3><i class="fas fa-file-alt"></i> Website Content Preview</h3>
+                        <div class="preview-content">
+                            <div class="detail-item">
+                                <span class="detail-label">Title:</span> ${data.content_analysis.title}
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Description:</span> ${data.content_analysis.description || 'Not available'}
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Content Type:</span> ${data.content_analysis.content_type || 'Unknown'}
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Content Length:</span> ${data.content_analysis.content_length || 0} characters
+                            </div>
+                            ${data.content_analysis.meta_keywords ? `
+                            <div class="detail-item">
+                                <span class="detail-label">Meta Keywords:</span> ${data.content_analysis.meta_keywords}
+                            </div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            resultSection.innerHTML = resultHTML;
+            resultSection.style.display = 'block';
+        }
+
+        function showError(message) {
+            const resultSection = document.getElementById('resultSection');
+            resultSection.innerHTML = `
+                <div class="safety-status error">
+                    <i class="fas fa-times-circle"></i> Analysis Error
+                    <div style="margin-top: 10px; font-size: 0.9em;">${message}</div>
+                </div>
+            `;
+            resultSection.style.display = 'block';
+        }
+
+        // Enter key support
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkURL();
+            }
+        });
+    </script>
+</body>
+</html>
